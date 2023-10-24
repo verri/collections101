@@ -3,6 +3,6 @@ EXE := $(subst .cpp,.exe,$(SRC))
 
 all: $(EXE)
 
-%.exe: %.cpp
+test/%.exe: test/%.cpp include/%.hpp
 	g++ -Iinclude -std=c++20 -O0 -g -fsanitize=leak,address,undefined $< -o $@
 	./$@

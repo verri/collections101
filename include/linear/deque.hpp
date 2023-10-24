@@ -22,9 +22,6 @@ public:
 
 private:
   struct Node {
-    Node() : previous{this}, next{this}, empty{} {}
-    Node(Node* p, Node* n, T value)
-      : previous{p}, next{n}, value{std::move(value)} {}
     ~Node() noexcept {}
 
     Node* previous;
@@ -38,7 +35,7 @@ private:
     static void erase(Node*) noexcept;
   };
 
-  Node head_;
+  Node head_ = { .previous = &head_, .next = &head_, .empty = {}};
 };
 
 template <std::movable T>
@@ -100,7 +97,10 @@ auto Deque<T>::is_empty() const noexcept -> bool {
 template <std::movable T>
 auto Deque<T>::Node::make(T value, Node* prev, Node* next)
   -> Node* {
-  return new Node{prev, next, std::move(value)};
+  return new Node{
+    .previous = prev,
+    .next = next,
+    .value = std::move(value)};
 }
 
 template <std::movable T>

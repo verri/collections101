@@ -7,8 +7,7 @@
 template <std::movable T>
 class Colony {
 public:
-  Colony(std::size_t capacity = 16)
-    : last_bucket_{new Bucket(capacity)} {}
+  Colony(std::size_t capacity = 16);
   ~Colony() noexcept;
 
   auto insert(T) -> T*;
@@ -19,9 +18,8 @@ public:
 
 private:
   struct Node {
-    Node(Node* last_removed, Node* previous,
-         Node* next) noexcept;
-    Node(T value, Node* previous, Node* next) noexcept;
+    Node(Node*, Node*, Node*) noexcept;
+    Node(T, Node*, Node*);
     ~Node() noexcept {}
 
     union {
@@ -34,40 +32,31 @@ private:
   };
 
   class Bucket : private std::allocator<Node> {
-    friend class Colony;
-
-  private:
-    explicit Bucket(std::size_t capacity)
-      : capacity_{capacity < 16 ? 16 : capacity} {}
-    explicit Bucket(Bucket* previous)
-      : capacity_{2 * previous->capacity_},
-        previous{std::move(previous)} {}
+  public:
+    explicit Bucket(std::size_t capacity);
+    explicit Bucket(Bucket* previous);
     ~Bucket() noexcept;
 
-    auto full() const noexcept -> bool {
-      return size_ == capacity_;
-    }
+    auto full() const noexcept -> bool;
+    auto insert(T, Node*, Node*) -> Node*;
 
-    auto insert() -> Node* { return nodes_ + size_++; }
-    auto insert(T value, Node* prev, Node* next) noexcept
-      -> Node* {
-      return new (nodes_ + size_++)
-        Node(std::move(value), prev, next);
-    }
-
+  private:
     std::size_t capacity_;
     Bucket* previous = nullptr;
-
     std::size_t size_ = 0;
     Node* nodes_ = this->allocate(capacity_);
   };
 
   auto insert_at_end(T) -> T*;
-  auto insert_at_last_removed(T) noexcept -> T*;
+  auto insert_at_last_removed(T) -> T*;
 
   Bucket* last_bucket_;
   Node head_ = {nullptr, &head_, &head_};
 };
+
+template <std::movable T>
+Colony<T>::Colony(std::size_t capacity)
+  : last_bucket_{new Bucket(capacity)} {}
 
 template <std::movable T>
 Colony<T>::Node::Node(Node* last_removed, Node* previous,
@@ -78,15 +67,36 @@ Colony<T>::Node::Node(Node* last_removed, Node* previous,
 
 template <std::movable T>
 Colony<T>::Node::Node(T value, Node* previous,
-                      Node* next) noexcept
+                      Node* next)
   : value{std::move(value)},
     next{next},
     previous{previous} {}
 
 template <std::movable T>
+Colony<T>::Bucket::Bucket(std::size_t capacity)
+  : capacity_{capacity < 16 ? 16 : capacity} {}
+
+template <std::movable T>
+Colony<T>::Bucket::Bucket(Bucket* previous)
+  : capacity_{2 * previous->capacity_},
+    previous{std::move(previous)} {}
+
+template <std::movable T>
 Colony<T>::Bucket::~Bucket() noexcept {
   delete previous;
   this->deallocate(nodes_, capacity_);
+}
+
+template <std::movable T>
+auto Colony<T>::Bucket::full() const noexcept -> bool {
+  return size_ == capacity_;
+}
+
+template <std::movable T>
+auto Colony<T>::Bucket::insert(T value, Node* prev,
+                               Node* next) -> Node* {
+  return new (nodes_ + size_++)
+    Node(std::move(value), prev, next);
 }
 
 template <std::movable T>
@@ -148,7 +158,7 @@ auto Colony<T>::insert_at_end(T value) -> T* {
 }
 
 template <std::movable T>
-auto Colony<T>::insert_at_last_removed(T value) noexcept
+auto Colony<T>::insert_at_last_removed(T value)
   -> T* {
   auto node = head_.last_removed;
   auto next_free = node->last_removed;
