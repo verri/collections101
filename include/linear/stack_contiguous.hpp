@@ -63,13 +63,12 @@ void Stack<T>::double_capacity() {
 
   if constexpr (std::is_nothrow_move_constructible_v<T>)
     std::uninitialized_move_n(values_, count_, buffer);
-  else
-    try {
-        std::uninitialized_copy_n(values_, count_, buffer);
-    } catch (...) {
-      this->deallocate(buffer, new_capacity);
-      throw;
-    }
+  else try {
+    std::uninitialized_copy_n(values_, count_, buffer);
+  } catch (...) {
+    this->deallocate(buffer, new_capacity);
+    throw;
+  }
 
   std::destroy_n(values_, count_);
   this->deallocate(values_, capacity_);
