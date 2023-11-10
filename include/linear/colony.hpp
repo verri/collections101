@@ -7,7 +7,7 @@
 template <std::movable T>
 class Colony {
 public:
-  Colony(std::size_t capacity = 16);
+  Colony(std::size_t capacity = 4);
   ~Colony() noexcept;
 
   auto insert(T) -> T*;
@@ -74,7 +74,7 @@ Colony<T>::Node::Node(T value, Node* previous,
 
 template <std::movable T>
 Colony<T>::Bucket::Bucket(std::size_t capacity)
-  : capacity_{capacity < 16 ? 16 : capacity} {}
+  : capacity_{capacity < 4 ? 4 : capacity} {}
 
 template <std::movable T>
 Colony<T>::Bucket::Bucket(Bucket* previous)

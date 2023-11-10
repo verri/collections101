@@ -62,7 +62,7 @@ auto Queue<T>::is_empty() const noexcept -> bool {
 
 template <std::movable T>
 void Queue<T>::double_capacity() {
-  auto new_capacity = capacity_ < 8 ? 16 : 2 * capacity_;
+  auto new_capacity = capacity_ < 2 ? 4 : 2 * capacity_;
   auto buffer = this->allocate(new_capacity);
 
   std::size_t i;
